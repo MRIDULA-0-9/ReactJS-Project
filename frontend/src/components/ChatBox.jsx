@@ -17,23 +17,16 @@ useEffect(() => {
 if (!groupId) return;
 
 axios.get(`${API}/api/messages/${groupId}`)
-.then(res => {
-setMessages(res.data);
-})
+.then(res => setMessages(res.data))
 .catch(err => console.log(err));
 
+socket.off("receiveMessage");
 
 socket.on("receiveMessage", (data) => {
-
 if (data.groupId === groupId) {
 setMessages(prev => [...prev, data]);
 }
-
 });
-
-return () => {
-socket.off("receiveMessage");
-};
 
 }, [groupId]);
 
@@ -41,28 +34,27 @@ socket.off("receiveMessage");
 /* SEND MESSAGE */
 const sendMessage = async () => {
 
-if (msg.trim() === "" || !groupId) return;
+if (msg.trim() === "") return;
 
 const user = JSON.parse(localStorage.getItem("user"));
 
 const messageData = {
-groupId: groupId,
+groupId,
 sender: user?.name || "User",
 text: msg
 };
 
 try{
 
-// save message to backend
-await axios.post(`${API}/api/groups/${groupId}/message`, messageData);
+const res = await axios.post(
+`${API}/api/groups/${groupId}/message`,
+messageData
+);
 
-// add message instantly to UI
-setMessages(prev => [...prev, messageData]);
+setMessages(prev => [...prev, res.data]);
 
-// send realtime message
-socket.emit("sendMessage", messageData);
+socket.emit("sendMessage", res.data);
 
-// clear input
 setMsg("");
 
 }catch(err){
@@ -85,24 +77,22 @@ try{
 
 const res = await axios.post(`${API}/api/upload`, formData);
 
-const imageName = res.data.file;
-
 const user = JSON.parse(localStorage.getItem("user"));
 
 const messageData = {
-groupId: groupId,
+groupId,
 sender: user?.name || "User",
-image: imageName
+image: res.data.file
 };
 
-// save to backend
-await axios.post(`${API}/api/groups/${groupId}/message`, messageData);
+const saved = await axios.post(
+`${API}/api/groups/${groupId}/message`,
+messageData
+);
 
-// update UI
-setMessages(prev => [...prev, messageData]);
+setMessages(prev => [...prev, saved.data]);
 
-// realtime send
-socket.emit("sendMessage", messageData);
+socket.emit("sendMessage", saved.data);
 
 }catch(err){
 console.log(err);
@@ -111,26 +101,24 @@ console.log(err);
 };
 
 
-/* UI */
 return (
 
 <div>
 
 <div className="messages">
 
-{messages.map((m, i) => (
+{messages.map((m,i)=>(
 
 <div key={i} className="message">
 
-<b>{m.sender}</b>:
+<b>{m.sender}</b>
 
-{m.text && <span> {m.text}</span>}
+{m.text && <span>: {m.text}</span>}
 
 {m.image && (
 <img
 src={`${API}/uploads/${m.image}`}
-alt="file"
-style={{ width: "120px", display: "block" }}
+style={{width:"120px"}}
 />
 )}
 
@@ -145,13 +133,13 @@ style={{ width: "120px", display: "block" }}
 
 <input
 value={msg}
-onChange={(e) => setMsg(e.target.value)}
+onChange={(e)=>setMsg(e.target.value)}
 placeholder="Type message"
 />
 
 <input type="file" onChange={uploadFile} />
 
-<button className="send-btn" onClick={sendMessage}>
+<button onClick={sendMessage}>
 Send
 </button>
 

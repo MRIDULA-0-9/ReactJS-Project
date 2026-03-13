@@ -7,23 +7,29 @@ router.post("/groups/:id/message", async (req, res) => {
 
 try {
 
-const { sender, text, image } = req.body;
+console.log("Incoming message:", req.body);
 
 const message = new Message({
 groupId: req.params.id,
-sender: sender || "User",
-text: text || "",
-image: image || ""
+sender: req.body.sender || "User",
+text: req.body.text || "",
+image: req.body.image || ""
 });
 
 const savedMessage = await message.save();
 
-res.status(200).json(savedMessage);
+console.log("Saved message:", savedMessage);
+
+res.json(savedMessage);
 
 } catch (err) {
 
 console.error("Message Save Error:", err);
-res.status(500).json({ error: "Message save failed" });
+
+res.status(500).json({
+error: "Message save failed",
+details: err.message
+});
 
 }
 

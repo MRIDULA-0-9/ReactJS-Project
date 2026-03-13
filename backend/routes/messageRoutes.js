@@ -4,40 +4,27 @@ const Message = require("../models/Message");
 
 /* SEND MESSAGE */
 router.post("/groups/:id/message", async (req, res) => {
+  try {
 
-try {
+    console.log("BODY:", req.body);
+    console.log("GROUP ID:", req.params.id);
 
-const groupId = req.params.id;
-const { sender, text, image } = req.body || {};
+    const message = new Message({
+      groupId: req.params.id,
+      sender: req.body.sender || "User",
+      text: req.body.text || "",
+      image: req.body.image || ""
+    });
 
-if (!groupId) {
- return res.status(400).json({ error: "Group ID missing" });
-}
+    const saved = await message.save();
 
-const message = new Message({
- groupId: groupId,
- sender: sender || "User",
- text: text || "",
- image: image || ""
+    res.json(saved);
+
+  } catch (err) {
+    console.error("MESSAGE ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
-
-const savedMessage = await message.save();
-
-res.status(200).json(savedMessage);
-
-} catch (err) {
-
-console.error("MESSAGE SAVE ERROR:", err);
-
-res.status(500).json({
- error: "Failed to save message",
- details: err.message
-});
-
-}
-
-});
-
 
 /* GET MESSAGES */
 router.get("/messages/:groupId", async (req, res) => {

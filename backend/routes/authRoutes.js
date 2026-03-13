@@ -39,18 +39,19 @@ res.json({
 /* LOGIN */
 router.post("/login", async (req, res) => {
 
-const { email, password } = req.body;
-
 try {
+
+const email = req.body.email.trim();
+const password = req.body.password.trim();
 
 const user = await User.findOne({ email });
 
 if (!user) {
- return res.status(401).json({ message: "Invalid email" });
+ return res.status(401).json({ message: "Email not found" });
 }
 
 if (user.password !== password) {
- return res.status(401).json({ message: "Invalid password" });
+ return res.status(401).json({ message: "Password incorrect" });
 }
 
 res.json({
@@ -59,7 +60,7 @@ res.json({
  email: user.email
 });
 
-} catch (err) {
+} catch(err){
  res.status(500).json(err);
 }
 

@@ -16,14 +16,14 @@ const login = async () => {
 
 try{
 
-axios.post(`${API}/api/login`,{
-email,
-password
-})
+const res = await axios.post(`${API}/api/login`,{
+ email,
+ password
+});
 
 localStorage.setItem("user",JSON.stringify(res.data));
 
-navigate("/dashboard");   // redirect after login
+navigate("/dashboard");
 
 }catch(err){
 alert("Invalid login");
@@ -55,8 +55,6 @@ Login
 <p>
 Don't have an account? <Link to="/register">Register</Link>
 </p>
-
-
 
 </div>
 

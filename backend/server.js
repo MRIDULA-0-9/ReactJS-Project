@@ -13,7 +13,9 @@ const app = express();
 
 /* CORS */
 app.use(cors({
-  origin: "*"
+  origin: "https://react-js-project-gkca.vercel.app",
+  methods: ["GET","POST","PUT","DELETE"],
+  credentials: true
 }));
 
 app.use(express.json());

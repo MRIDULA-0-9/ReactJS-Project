@@ -4,27 +4,38 @@ const Message = require("../models/Message");
 
 /* SEND MESSAGE */
 router.post("/groups/:id/message", async (req, res) => {
-  try {
-    const { sender, text, image } = req.body;
 
-    const message = new Message({
-      groupId: req.params.id,
-      sender: sender || "User",
-      text: text || "",
-      image: image || ""
-    });
+try {
 
-    const savedMessage = await message.save();
+const groupId = req.params.id;
+const { sender, text, image } = req.body || {};
 
-    res.json(savedMessage);
+if (!groupId) {
+ return res.status(400).json({ error: "Group ID missing" });
+}
 
-  } catch (err) {
-    console.error("Message Save Error:", err);
-    res.status(500).json({
-      error: "Message save failed",
-      details: err.message
-    });
-  }
+const message = new Message({
+ groupId: groupId,
+ sender: sender || "User",
+ text: text || "",
+ image: image || ""
+});
+
+const savedMessage = await message.save();
+
+res.status(200).json(savedMessage);
+
+} catch (err) {
+
+console.error("MESSAGE SAVE ERROR:", err);
+
+res.status(500).json({
+ error: "Failed to save message",
+ details: err.message
+});
+
+}
+
 });
 
 
@@ -34,15 +45,18 @@ router.get("/messages/:groupId", async (req, res) => {
 try {
 
 const messages = await Message.find({
-groupId: req.params.groupId
+ groupId: req.params.groupId
 }).lean();
 
 res.json(messages);
 
 } catch (err) {
 
-console.error("Fetch Message Error:", err);
-res.status(500).json({ error: "Fetch failed" });
+console.error("FETCH MESSAGE ERROR:", err);
+
+res.status(500).json({
+ error: "Failed to fetch messages"
+});
 
 }
 

@@ -80,9 +80,9 @@ const res = await axios.post(`${API}/api/upload`, formData);
 const user = JSON.parse(localStorage.getItem("user"));
 
 const messageData = {
-groupId,
-sender: user?.name || "User",
-image: res.data.file
+ groupId,
+ sender: user?.name || "User",
+ text: msg
 };
 
 const saved = await axios.post(

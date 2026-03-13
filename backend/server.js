@@ -11,7 +11,11 @@ const uploadRoutes = require("./routes/uploadRoutes");
 
 const app = express();
 
-app.use(cors());
+/* CORS */
+app.use(cors({
+  origin: "*"
+}));
+
 app.use(express.json());
 
 /* ROUTES */
@@ -24,7 +28,7 @@ app.use("/api", uploadRoutes);
 app.use("/uploads", express.static("uploads"));
 
 /* DATABASE */
-mongoose.connect("mongodb://127.0.0.1:27017/groupchat")
+mongoose.connect(process.env.MONGO_URI)
 .then(()=>console.log("MongoDB Connected"))
 .catch(err=>console.log(err));
 
@@ -45,7 +49,9 @@ io.on("connection",(socket)=>{
 
 });
 
-/* SERVER START */
-server.listen(5000,()=>{
- console.log("Server running on port 5000");
+/* SERVER */
+const PORT = process.env.PORT || 5000;
+
+server.listen(PORT,()=>{
+ console.log("Server running on port",PORT);
 });

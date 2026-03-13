@@ -2,7 +2,9 @@ import {useState,useEffect} from "react";
 import axios from "axios";
 import {io} from "socket.io-client";
 
-const socket = io("http://localhost:5000");
+const API = import.meta.env.VITE_API_URL;
+const socket = io(API);
+
 
 function ChatBox({groupId}){
 
@@ -13,7 +15,7 @@ useEffect(()=>{
 
 if(!groupId) return;
 
-axios.get(`http://localhost:5000/api/messages/${groupId}`)
+axios.get(`${API}/api/messages/${groupId}`)
 .then(res=>{
 setMessages(res.data);
 });
@@ -44,10 +46,8 @@ text: msg
 try{
 
 // save message to backend
-await axios.post(
-`http://localhost:5000/api/groups/${groupId}/message`,
-messageData
-);
+await axios.post(`${API}/api/groups/${groupId}/message`, messageData)
+
 
 // add message instantly to UI
 setMessages(prev => [...prev, messageData]);
@@ -72,10 +72,7 @@ const uploadFile = async (e)=>{
 
  formData.append("file",file);
 
- const res = await axios.post(
-   "http://localhost:5000/api/upload",
-   formData
- );
+const res = await axios.post(`${API}/api/upload`, formData)
 
  const imageName = res.data.file;
 

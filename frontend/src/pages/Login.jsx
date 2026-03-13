@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 
 function Login(){
 
+const API = import.meta.env.VITE_API_URL;
+
 const[email,setEmail] = useState("");
 const[password,setPassword] = useState("");
 
@@ -14,13 +16,10 @@ const login = async () => {
 
 try{
 
-const res = await axios.post(
-"http://localhost:5000/api/login",
-{
+axios.post(`${API}/api/login`,{
 email,
 password
-}
-);
+})
 
 localStorage.setItem("user",JSON.stringify(res.data));
 

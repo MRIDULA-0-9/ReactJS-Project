@@ -1,56 +1,78 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-function GroupList({setSelectedGroup,setGroupName,setMembers}) {
+const API = import.meta.env.VITE_API_URL;
 
-const [groups,setGroups] = useState([]);
-const [newGroup,setNewGroup] = useState("");
-const [member,setMember] = useState("");
+function GroupList({ setSelectedGroup, setGroupName, setMembers }) {
 
-useEffect(()=>{
+const [groups, setGroups] = useState([]);
+const [newGroup, setNewGroup] = useState("");
+const [member, setMember] = useState("");
 
-axios.get("http://localhost:5000/api/groups")
-.then(res => setGroups(res.data));
+/* LOAD GROUPS */
+useEffect(() => {
 
-},[]);
+axios.get(`${API}/api/groups`)
+.then(res => setGroups(res.data))
+.catch(err => console.log(err));
+
+}, []);
 
 
-const createGroup = async ()=>{
+/* CREATE GROUP */
+const createGroup = async () => {
 
-const res = await axios.post(
-"http://localhost:5000/api/groups",
-{name:newGroup,admin:"User"}
-);
+try{
 
-setGroups([...groups,res.data]);
+const res = await axios.post(`${API}/api/groups`,{
+ name: newGroup,
+ admin: "User"
+});
+
+setGroups([...groups, res.data]);
 setNewGroup("");
+
+}catch(err){
+console.log(err);
+}
 
 };
 
 
-const addMember = async (id)=>{
+/* ADD MEMBER */
+const addMember = async (id) => {
 
-await axios.put(
-`http://localhost:5000/api/groups/${id}/add-member`,
-{member,user:"User"}
-);
+try{
+
+await axios.put(`${API}/api/groups/${id}/add-member`,{
+ member,
+ user:"User"
+});
 
 alert("Member Added");
 
+}catch(err){
+console.log(err);
+}
+
 };
 
 
-const removeMember = async (groupId,memberName)=>{
+/* REMOVE MEMBER */
+const removeMember = async (groupId, memberName) => {
 
-await axios.put(
-`http://localhost:5000/api/groups/${groupId}/remove-member`,
-{
-member:memberName,
-user:"User"
-}
-);
+try{
+
+await axios.put(`${API}/api/groups/${groupId}/remove-member`,{
+ member: memberName,
+ user:"User"
+});
 
 alert("Member removed");
+
+}catch(err){
+console.log(err);
+}
 
 };
 
@@ -75,6 +97,7 @@ setMembers(g.members || []);
 {g.name}
 </p>
 
+
 {/* ADD MEMBER */}
 <div className="member-controls">
 
@@ -89,6 +112,7 @@ Add Member
 </button>
 
 </div>
+
 
 {/* MEMBER LIST */}
 <div className="member-list">
@@ -115,6 +139,7 @@ Remove
 </div>
 
 ))}
+
 
 <input
 value={newGroup}

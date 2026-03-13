@@ -1,39 +1,47 @@
-import {useState,useEffect} from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
-import {io} from "socket.io-client";
+import { io } from "socket.io-client";
 
 const API = import.meta.env.VITE_API_URL;
 const socket = io(API);
 
+function ChatBox({ groupId }) {
 
-function ChatBox({groupId}){
+const [msg, setMsg] = useState("");
+const [messages, setMessages] = useState([]);
 
-const [msg,setMsg] = useState("");
-const [messages,setMessages] = useState([]);
 
-useEffect(()=>{
+/* LOAD MESSAGES */
+useEffect(() => {
 
-if(!groupId) return;
+if (!groupId) return;
 
 axios.get(`${API}/api/messages/${groupId}`)
-.then(res=>{
+.then(res => {
 setMessages(res.data);
-});
+})
+.catch(err => console.log(err));
 
-socket.on("receiveMessage",(data)=>{
 
-if(data.groupId === groupId){
-setMessages(prev => [...prev,data]);
+socket.on("receiveMessage", (data) => {
+
+if (data.groupId === groupId) {
+setMessages(prev => [...prev, data]);
 }
 
 });
 
-},[groupId]);
+return () => {
+socket.off("receiveMessage");
+};
+
+}, [groupId]);
 
 
+/* SEND MESSAGE */
 const sendMessage = async () => {
 
-if(msg.trim() === "" || !groupId) return;
+if (msg.trim() === "" || !groupId) return;
 
 const user = JSON.parse(localStorage.getItem("user"));
 
@@ -46,8 +54,7 @@ text: msg
 try{
 
 // save message to backend
-await axios.post(`${API}/api/groups/${groupId}/message`, messageData)
-
+await axios.post(`${API}/api/groups/${groupId}/message`, messageData);
 
 // add message instantly to UI
 setMessages(prev => [...prev, messageData]);
@@ -64,45 +71,71 @@ console.log(err);
 
 };
 
-const uploadFile = async (e)=>{
 
- const file = e.target.files[0];
+/* UPLOAD FILE */
+const uploadFile = async (e) => {
 
- const formData = new FormData();
+const file = e.target.files[0];
+if (!file) return;
 
- formData.append("file",file);
+const formData = new FormData();
+formData.append("file", file);
 
-const res = await axios.post(`${API}/api/upload`, formData)
+try{
 
- const imageName = res.data.file;
+const res = await axios.post(`${API}/api/upload`, formData);
 
- const messageData = {
-   sender: members[0],
-   image:imageName
- };
+const imageName = res.data.file;
 
- await axios.post(
-   `http://localhost:5000/api/groups/${groupId}/message`,
-   messageData
- );
+const user = JSON.parse(localStorage.getItem("user"));
 
- socket.emit("sendMessage",{...messageData,groupId});
+const messageData = {
+groupId: groupId,
+sender: user?.name || "User",
+image: imageName
+};
+
+// save to backend
+await axios.post(`${API}/api/groups/${groupId}/message`, messageData);
+
+// update UI
+setMessages(prev => [...prev, messageData]);
+
+// realtime send
+socket.emit("sendMessage", messageData);
+
+}catch(err){
+console.log(err);
+}
 
 };
 
 
-return(
+/* UI */
+return (
 
 <div>
 
 <div className="messages">
 
-{messages.map((m,i)=>(
+{messages.map((m, i) => (
+
 <div key={i} className="message">
 
-<b>{m.sender}</b>: {m.text}
+<b>{m.sender}</b>:
+
+{m.text && <span> {m.text}</span>}
+
+{m.image && (
+<img
+src={`${API}/uploads/${m.image}`}
+alt="file"
+style={{ width: "120px", display: "block" }}
+/>
+)}
 
 </div>
+
 ))}
 
 </div>
@@ -112,11 +145,11 @@ return(
 
 <input
 value={msg}
-onChange={(e)=>setMsg(e.target.value)}
+onChange={(e) => setMsg(e.target.value)}
 placeholder="Type message"
 />
 
-<input type="file" onChange={uploadFile}/>
+<input type="file" onChange={uploadFile} />
 
 <button className="send-btn" onClick={sendMessage}>
 Send
@@ -126,7 +159,8 @@ Send
 
 </div>
 
-)
+);
+
 }
 
 export default ChatBox;
